@@ -6,6 +6,7 @@ import sys
 from cpu import *
 
 cpu = CPU()
+#file_name = sys.argv[1]
 
 cpu.load()
 cpu.run()
