@@ -15,6 +15,9 @@ class CPU:
         self.pc = 0
         self.sp = 7
 
+        # Flags
+        self.fl = 0b00000000
+
         # Reference Table
         self.branchtable = {
             0b00000001: self.HLT,
@@ -25,7 +28,11 @@ class CPU:
             0b01000101: self.PUSH,
             0b01000110: self.POP,
             0b01010000: self.CALL,
-            0b00010001: self.RET
+            0b00010001: self.RET,
+            0b10100111: self.CMP,
+            0b01010100: self.JMP,
+            0b01010101: self.JEQ,
+            0b01010110: self.JNE
         }
     
     def ram_read(self, MAR):
@@ -75,6 +82,31 @@ class CPU:
         self.registers[self.sp] += 1
         self.pc = return_address
 
+    def CMP(self, a, b):
+        self.fl = 0b00000000
+        self.alu('CMP', a, b)
+        self.pc += 3
+
+    def JMP(self, a, b):
+        address = self.registers[a]
+        self.pc = address
+
+    def JEQ(self, a, b):
+        address = self.registers[a]
+        
+        if self.fl == 0b00000001:
+            self.pc = address
+        else:
+            self.pc += 2
+
+    def JNE(self, a, b):
+        address = self.registers[a]
+
+        if self.fl != 0b00000001:
+            self.pc = address
+        else:
+            self.pc += 2
+
     def load(self, file):
         """Load a program into memory."""
         address = 0
@@ -96,6 +128,13 @@ class CPU:
             self.registers[reg_a] += self.registers[reg_b]
         elif op == "MUL":
             self.registers[reg_a] *= self.registers[reg_b]
+        elif op == "CMP":
+            if self.registers[reg_a] < self.registers[reg_b]:
+                self.fl = 0b00000100
+            elif self.registers[reg_a] > self.registers[reg_b]:
+                self.fl = 0b00000010
+            elif self.registers[reg_a] == self.registers[reg_b]:
+                self.fl = 0b00000001
         else:
             raise Exception("Unsupported ALU operation")
 
